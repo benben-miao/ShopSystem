@@ -2,7 +2,7 @@
 	<el-container>
 		<!-- 1. Aside -->
 		<el-aside>
-			<el-menu default-active="/" :collapse='isCollapse' collapse-transition router>
+			<el-menu :default-active="$router.path" :collapse='isCollapse' collapse-transition router>
 				<el-menu-item index="/">
 					<i class="el-icon-table-lamp"></i>
 					<template slot="title">Home Page</template>

@@ -11,7 +11,7 @@ const AdvertView = ()=> import('../views/Advert/AdvertView.vue')
 const OrderView = ()=> import('../views/Order/OrderView.vue')
 const OrderListView = ()=> import('../views/Order/OrderList/OrderListView.vue')
 const OrderBackView = ()=> import('../views/Order/OrderBack/OrderBackView.vue')
-
+const AddGoodsView = ()=> import('../views/Goods/AddGoodsView.vue')
 Vue.use(VueRouter)
 
 const routes = [
@@ -29,6 +29,11 @@ const routes = [
         path: '/goods',
         name: 'Goods',
         component: GoodsView
+      },
+      {
+        path: '/add-goods',
+        name: 'AddGoods',
+        component: AddGoodsView
       },
       {
         path: '/params',

@@ -2,9 +2,12 @@
   <div class="goods">
     <!-- 1.Search -->
     <div class="search">
-      <el-input v-model='input' placeholder="Please input"></el-input>
-      <el-button type="primary">Search</el-button>
-      <el-button type="primary">Add</el-button>
+      <el-input v-model='input' placeholder="Please input" @change="searchInp"></el-input>
+      <el-button type="primary" @click="searchInp">Search</el-button>
+      <el-button type="primary">
+        <router-link to="/add-goods" style="color: #ffffff;">Add1</router-link>
+      </el-button>
+      <el-button type="primary" @click="addGoods">Add2</el-button>
     </div>
 
     <!-- 2.Table -->
@@ -16,9 +19,9 @@
         <el-table-column prop="price" label="价格" width="100"></el-table-column>
         <el-table-column prop="num" label="数量" width="100"></el-table-column>
         <el-table-column prop="category" label="类目" width="100"></el-table-column>
-        <el-table-column prop="image" label="图片"></el-table-column>
-        <el-table-column prop="sellPoint" label="卖点"></el-table-column>
-        <el-table-column prop="descs" label="描述"></el-table-column>
+        <el-table-column prop="image" label="图片" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="sellPoint" label="卖点" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="descs" label="描述" show-overflow-tooltip></el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">
@@ -30,36 +33,100 @@
       </el-table>
     </div>
 
-    <!-- 3.Pagenation -->
+    <!-- 3.Pagination -->
+    <MyPagination :total='total' :pageSize='pageSize' @changePage='changePage' :currentPage='currentPage' />
+
+    <!-- 4.Dialog -->
+    <!-- <GoodsDialog :dialogVisible='dialogVisible' @changeDialog='changeDialog'/> -->
+    <GoodsDialog ref='dialog' />
   </div>
 </template>
 
 <script>
+import MyPagination from '../../components/MyPagination.vue'
+import GoodsDialog from './GoodsDialog.vue'
+
 export default {
+  components: {
+    MyPagination,
+    GoodsDialog
+  },
   data() {
     return {
       input: "",
-      tableData: []
+      tableData: [],
+      total: 10,
+      pageSize: 1,
+      isGoods: true,
+      list: [],
+      dialogVisible: false,
+      currentPage: 1
     }
   },
   methods: {
-    handleEdit(){
+    addGoods() {
+      // this.dialogVisible = true;
+      this.$refs.dialog.dialogVisible = true;
+    },
+    // changeDialog() {
+    //   this.dialogVisible = false;
+    // },
+    changePage(num) {
+      this.currentPage = num;
+      if (this.isGoods) {
+        this.getData(num);
+      } else {
+        this.tableData = this.list.slice((num - 1) * 3, num * 3);
+      }
+    },
+    handleEdit() {
 
     },
-    handleDelete(){
-      
+    handleDelete() {
+
+    },
+    getData(page) {
+      this.$api.getGoodsList({
+        page: page
+      })
+        .then(res => {
+          // console.log(res.data);
+          if (res.data.status === 200) {
+            this.tableData = res.data.data;
+            this.total = res.data.total;
+            this.pageSize = res.data.pageSize;
+          }
+        })
+    },
+    searchInp(val) {
+      if (!val) {
+        this.getData(1);
+        this.currentPage = 1;
+        return;
+      }
+      // console.log(val);
+      this.$api.getSearch({
+        search: val
+      }).then(res => {
+        // console.log(res.data);
+        this.currentPage = 1;
+        if (res.data.status === 200) {
+          this.list = res.data.result;
+          this.total = res.data.result.length;
+          this.pageSize = 3;
+          this.tableData = res.data.result.slice(0, 3);
+          this.isGoods = false;
+        } else {
+          this.tableData = [];
+          this.total = 1;
+          this.pageSize = 1;
+          this.isGoods = true;
+        }
+      })
     }
   },
-  created(){
-    this.$api.getGoodsList({
-      page:1
-    })
-    .then(res=>{
-      console.log(res.data);
-      if(res.data.status === 200){
-        this.tableData = res.data.data;
-      }
-    })
+  created() {
+    this.getData(1);
   }
 }
 </script>
