@@ -38,7 +38,7 @@
 
     <!-- 4.Dialog -->
     <!-- <GoodsDialog :dialogVisible='dialogVisible' @changeDialog='changeDialog'/> -->
-    <GoodsDialog ref='dialog' />
+    <GoodsDialog ref='dialog' :dialogTitle='dialogTitle' :rowData='rowData'/>
   </div>
 </template>
 
@@ -60,13 +60,16 @@ export default {
       isGoods: true,
       list: [],
       dialogVisible: false,
-      currentPage: 1
+      currentPage: 1,
+      dialogTitle: 'New Goods',
+      rowData: {}
     }
   },
   methods: {
     addGoods() {
       // this.dialogVisible = true;
       this.$refs.dialog.dialogVisible = true;
+      this.dialogTitle = "New Goods";
     },
     // changeDialog() {
     //   this.dialogVisible = false;
@@ -79,11 +82,40 @@ export default {
         this.tableData = this.list.slice((num - 1) * 3, num * 3);
       }
     },
-    handleEdit() {
-
+    handleEdit(index, row) {
+      this.$refs.dialog.dialogVisible = true;
+      this.dialogTitle = "Edit Goods";
+      // this.$refs.dialog.ruleForm = row;
+      this.rowData = row;
     },
-    handleDelete() {
-
+    handleDelete(index, row) {
+      console.log('delete', index, row);
+      this.$confirm("Delete data", "Tips", {
+        confirmButtonText: "Confirm",
+        cancelButtonText: "Cancel",
+        type: "warning",
+      })
+        .then(() => {
+          this.$api.getDeleteGoods({
+            id: row.id
+          })
+            .then(res => {
+              // console.log(res.data);
+              if (res.data.status === 200) {
+                this.$message({
+                  type: 'success',
+                  message: 'success'
+                });
+                this.getData(1);
+              }
+            })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: 'canceled'
+          })
+        })
     },
     getData(page) {
       this.$api.getGoodsList({

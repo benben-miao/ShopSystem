@@ -19,6 +19,9 @@ const routes = [
     path: '',
     name: 'Layout',
     component: LayoutView,
+    // meta: {
+    //   isLogin: true
+    // },
     children: [
       {
         path: '/',
@@ -77,5 +80,19 @@ const router = new VueRouter({
   base: process.env.BASE_URL,
   routes
 })
+
+// router.beforeEach((to, from, next) => {
+//   // console.log('to', to);
+//   if(to.matched.some(ele => ele.meta.isLogin)) {
+//     let token='';
+//     if(token) {
+//       next()
+//     }else {
+//       next('/login')
+//     }
+//   }else{
+//     next();
+//   }
+// })
 
 export default router

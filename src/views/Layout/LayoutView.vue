@@ -5,24 +5,24 @@
 			<el-menu :default-active="$router.path" :collapse='isCollapse' collapse-transition router>
 				<el-menu-item index="/">
 					<i class="el-icon-table-lamp"></i>
-					<template slot="title">Home Page</template>
+					<template slot="title">{{ $t('homeMenu') }}</template>
 				</el-menu-item>
 				<el-menu-item index="/goods">
 					<i class="el-icon-s-shop"></i>
-					<template slot="title">Goods Detail</template>
+					<template slot="title">{{ $t('goodsMenu') }}</template>
 				</el-menu-item>
 				<el-menu-item index="/params">
 					<i class="el-icon-s-order"></i>
-					<template slot="title">Params Detail</template>
+					<template slot="title">{{ $t('paramsMenu') }}</template>
 				</el-menu-item>
 				<el-menu-item index="/advert">
 					<i class="el-icon-message-solid"></i>
-					<template slot="title">Advert Detail</template>
+					<template slot="title">{{ $t('advertMenu') }}</template>
 				</el-menu-item>
 				<el-submenu index="/order">
 					<template slot="title">
 						<i class="el-icon-s-goods"></i>
-						<span slot="title">Order Detail</span>
+						<span slot="title">{{ $t('orderMenu') }}</span>
 					</template>
 
 					<el-menu-item index="/order/order-list">Order List</el-menu-item>
@@ -34,12 +34,29 @@
 		<el-container class="content">
 			<!-- 2. Header -->
 			<el-header>
-				<i v-if='!isCollapse' @click='changeCollapse' class="el-icon-news" 
+				<i v-if='!isCollapse' @click='changeCollapse' class="el-icon-news"
 					style="font-size: 1.5em; font-weight: bold; background-color: #ff000033; padding: 5px; border-radius: 5px;">
 				</i>
-				<i v-else @click='changeCollapse' class="el-icon-news" 
+				<i v-else @click='changeCollapse' class="el-icon-news"
 					style="font-size: 1.5em; font-weight: bold; background-color: #0000ff33; padding: 5px; border-radius: 5px;">
 				</i>
+
+				<div class="header-right">
+					<el-dropdown @command="selectLang">
+						<span class="el-dropdown-link">
+							Multi Language<i class="el-icon-arrow-down el-icon--right"></i>
+						</span>
+						<el-dropdown-menu slot="dropdown">
+							<el-dropdown-item command="zh">中文</el-dropdown-item>
+							<el-dropdown-item command="en">English</el-dropdown-item>
+						</el-dropdown-menu>
+					</el-dropdown>
+
+					<div class="user">
+						User
+					</div>
+				</div>
+
 			</el-header>
 
 			<!-- 3. Main -->
@@ -64,8 +81,11 @@ export default {
 		}
 	},
 	methods: {
-		changeCollapse(){
+		changeCollapse() {
 			this.isCollapse = !this.isCollapse;
+		},
+		selectLang(command) {
+			this.$i18n.locale = command;
 		}
 	}
 }
@@ -82,6 +102,16 @@ export default {
 	box-shadow: 0px 1px 5px #00880033;
 	border-radius: 10px;
 	line-height: 60px;
+}
+
+.header-right {
+	float: right;
+	padding-right: 20px;
+	display: flex;
+}
+
+.user {
+	margin-left: 20px;
 }
 
 .el-aside {

@@ -1,7 +1,8 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
 	<div>
-		<el-dialog title="Add Goods" :visible.sync='dialogVisible' width="60%">
+		<!-- 1.Form -->
+		<el-dialog :title="dialogTitle" :visible.sync='dialogVisible' width="60%">
 			<el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="120px" class="demo-ruleForm">
 				<el-form-item label="Category" prop="category">
 					<el-button type="primary" @click="innerVisible=true">Category</el-button>
@@ -36,41 +37,75 @@
 					<el-input v-model="ruleForm.sellPoint"></el-input>
 				</el-form-item>
 				<el-form-item label="Goodes Image" prop="image">
-					<el-button type="primary">Update Image</el-button>
+					<el-button type="primary" @click="innerVisibleImage = true">Update Image</el-button>
+					<img :src="ruleForm.image" height="200" alt="" style="margin-left: 10px;">
 				</el-form-item>
 				<el-form-item label="Goodes Desc" prop="descs">
-					<textarea name="" id="" cols="30" rows="10"></textarea>
-				</el-form-item>
-
-				<el-form-item>
-					<el-button type="primary" @click="submitForm('ruleForm')">Create</el-button>
-					<el-button @click="resetForm('ruleForm')">Reset</el-button>
+					<WangEditor @sendEditor="sendEditor" ref='myEditor' />
 				</el-form-item>
 			</el-form>
 
 			<span slot="footer" class="dialog-footer">
 				<!-- <el-button @click="close">Cancel</el-button>
 				<el-button type="primary" @click="close">Confirm</el-button> -->
-				<el-button @click="dialogVisible = false">Cancel</el-button>
-				<el-button type="primary" @click="dialogVisible = false">Confirm</el-button>
+				<el-button @click="resetForm">Cancel</el-button>
+				<el-button type="primary" @click="submitForm">Submit</el-button>
 			</span>
 
+			<!-- 2.GoodsTree -->
 			<el-dialog width="40%" title="Category" :visible.sync="innerVisible" append-to-body>
-				<GoodsTree @sendTreeData='sendTreeData'/>
-				<el-button @click="innerVisible = false">Cancel</el-button>
-				<el-button type="primary" @click="showTreeData">Confirm</el-button>
+				<GoodsTree @sendTreeData='sendTreeData' />
+				<span slot="footer" class="dialog-footer">
+					<el-button @click="innerVisible = false">Cancel</el-button>
+					<el-button type="primary" @click="showTreeData">Confirm</el-button>
+				</span>
 			</el-dialog>
 
+			<!-- 3.ImageUpload -->
+			<el-dialog width="40%" title="ImageUpload" :visible.sync="innerVisibleImage" append-to-body>
+				<ImageUpload @sendImage='sendImage' />
+				<span slot="footer" class="dialog-footer">
+					<el-button @click="innerVisibleImage = false">Cancel</el-button>
+					<el-button type="primary" @click="showImage">Confirm</el-button>
+				</span>
+			</el-dialog>
 		</el-dialog>
 	</div>
 </template>
 
 <script>
 import GoodsTree from './GoodsTree.vue'
+import ImageUpload from './ImageUpload.vue'
+import WangEditor from './WangEditor.vue'
 
 export default {
+	props: {
+		dialogTitle: {
+			type: String,
+			default: "New Goods"
+		},
+		rowData: {
+			type: Object,
+			default: function () {
+				return {}
+			}
+		}
+	},
+	// mounted() {
+	// 	this.ruleForm = this.rowData;
+	// },
+	watch: {
+		rowData(val) {
+			this.ruleForm = val;
+			this.$nextTick(() => {
+				this.$refs.myEditor.editor.txt.html(val.descs)
+			})
+		}
+	},
 	components: {
-		GoodsTree
+		GoodsTree,
+		ImageUpload,
+		WangEditor
 	},
 	// props: {
 	// 	dialogVisible: Boolean
@@ -79,14 +114,18 @@ export default {
 		return {
 			dialogVisible: false,
 			innerVisible: false,
+			innerVisibleImage: false,
+			imageUrl: '',
 			treeData: {},
 			ruleForm: {
+				id: "",
 				title: "",
 				price: "",
 				num: "",
 				sellPoint: "",
 				image: "",
 				descs: "",
+				cid: '',
 				category: "",
 				date1: "",
 				date2: ""
@@ -106,28 +145,92 @@ export default {
 		}
 	},
 	methods: {
+		sendEditor(val) {
+			this.ruleForm.descs = val;
+		},
+		sendImage(val) {
+			// console.log(val);
+			this.imageUrl = val;
+		},
+		showImage() {
+			this.innerVisibleImage = false;
+			this.ruleForm.image = this.imageUrl;
+		},
 		sendTreeData(val) {
 			this.treeData = val;
 		},
 		showTreeData() {
 			this.innerVisible = false;
 			this.ruleForm.category = this.treeData.name;
+			this.ruleForm.cid = this.treeData.cid;
 		},
 		// close() {
 		// 	this.$emit('changeDialog');
 		// },
-		submitForm(formName) {
-			this.$refs[formName].validate((valid) => {
+		submitForm() {
+			this.$refs.ruleForm.validate((valid) => {
 				if (valid) {
-					alert('submit!');
+					// console.log(this.ruleForm);
+					let { id, title, image, sellPoint, price, cid, category, num, descs } = this.ruleForm;
+					if (this.dialogTitle === "New Goods") {
+						this.$api.getInsertGoods({
+							title, image, sellPoint, price, cid, category, num, descs
+						})
+							.then(res => {
+								// console.log(res.data);
+								if (res.data.status === 200) {
+									this.dialogVisible = false;
+									this.$parent.getData(1);
+									this.$message({
+										message: 'Success',
+										type: 'success'
+									})
+									this.resetForm();
+								} else {
+									this.$message.error('Error');
+								}
+							})
+					} else {
+						console.log('Edit Goods');
+						this.$api.getUpdateGoods({
+							id,	title, image, sellPoint, price, cid, category, num, descs
+						})
+						.then(res=> {
+							// console.log(res.data);
+							if(res.data.status === 200) {
+								this.$parent.getData(1);
+								this.$message({
+									message: 'Success',
+									type: 'success'
+								});
+								this.resetForm();
+							} else {
+								this.$message.error('Error');
+							}
+						})
+					}
 				} else {
 					console.log('error submit!!');
 					return false;
 				}
 			});
 		},
-		resetForm(formName) {
-			this.$refs[formName].resetFields();
+		resetForm() {
+			this.dialogVisible = false;
+			// this.$refs.ruleForm.resetFields();
+			this.ruleForm = {
+				title: "",
+				price: "",
+				num: "",
+				sellPoint: "",
+				image: "",
+				descs: "",
+				cid: '',
+				category: "",
+				date1: "",
+				date2: ""
+			};
+			this.$refs.myEditor.editor.txt.clear();
 		}
 	}
 }
